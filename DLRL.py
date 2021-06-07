@@ -36,7 +36,7 @@ class DLRL(nn.Module):
             self.W.append(nn.Parameter(torch.eye(self.d, self.d), requires_grad=True))  
         self.W.append(nn.Parameter(torch.rand(self.d, self.n), requires_grad=True))
 
-        self.prox = SHRINK(1)  
+        self.prox = SHRINK()  
 
 
     def forward(self, u):
