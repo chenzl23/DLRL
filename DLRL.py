@@ -42,6 +42,7 @@ class DLRL(nn.Module):
     def forward(self, u):
         x_list = u
         return_x = []
+        eta = min(max(self.eta, 0), 1)
         for i in range(self.p_len): 
             ind = i % self.p_len
             x = x_list[ind]
@@ -51,14 +52,14 @@ class DLRL(nn.Module):
                 for j in range(1, self.p_len):
                     x_right = x_right.matmul(x_list[j]) 
                 lipz_temp = max(Spectral_norm(x_right), torch.FloatTensor([1e-4]))
-                lipz = self.eta * (lipz_temp ** 2)
+                lipz = eta * (lipz_temp ** 2)
             elif ind == (self.p_len-1):
                 x_left = torch.eye(self.m, self.m)
                 x_right = torch.eye(self.n, self.n)
                 for j in range(0, self.p_len - 1):
                     x_left = x_left.matmul(x_list[j]) 
                 lipz_temp = max(Spectral_norm(x_left), torch.FloatTensor([1e-4]))
-                lipz = self.eta * (lipz_temp ** 2)
+                lipz = eta * (lipz_temp ** 2)
             else:
                 x_left = torch.eye(self.m, self.m)
                 x_right = torch.eye(self.d, self.d)
@@ -68,7 +69,7 @@ class DLRL(nn.Module):
                     x_right = x_right.matmul(x_list[j])
                 lipz_templ = max(Spectral_norm(x_left), torch.FloatTensor([1e-4]))
                 lipz_tempr = max(Spectral_norm(x_right), torch.FloatTensor([1e-4]))
-                lipz = self.eta * (lipz_templ ** 2) * (lipz_tempr ** 2)
+                lipz = eta * (lipz_templ ** 2) * (lipz_tempr ** 2)
 
             x_prob = x_left.matmul(x).matmul(x_right)
             WXM = self.I.mul(self.M - x_prob)
