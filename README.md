@@ -1,6 +1,6 @@
 ## Deep Sparse Regularizer Learning (DSRL)
 
-This is an implement of methods in "Efficient Differentiable Low-Rank Learning Framework for Matrix Completion" that is still under review.
+This is an implement of methods in "Zhaoliang Chen, Jie Yao, Guobao Xiao and Shiping Wang, “Efficient and Differentiable Low-rank Matrix Completion with Back Propagation”,  IEEE Transactions on Multimedia, 2021." that is still under review.
 
 ### Environment
 
