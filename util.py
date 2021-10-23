@@ -13,7 +13,3 @@ def Spectral_norm(x):
         return s
     return torch.svd(x)[1][0]
 
-def schatten_p_norm(x, p):
-    u, s, v = torch.svd(x)
-    sp = torch.sum(s ** p)
-    return sp

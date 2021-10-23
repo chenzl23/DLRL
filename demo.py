@@ -11,6 +11,7 @@ verbose = 10
 lamda = 1e2
 init_eta = 0.1
 maxiter = 300
+
 pi = torch.FloatTensor([1,1,1,1,1]) 
 summ = 0.0
 for p in pi:

@@ -1,15 +1,15 @@
 import torch
 from torch import nn
-from util import Spectral_norm, schatten_p_norm
-from shrink import SHRINK
+from util import Spectral_norm
+from ProxOperator import Prox
 import time
 
 class DLRL(nn.Module):
-    def __init__(self, M, I, I_test, d, p, maxiter, lr, eta, scale,patience, decay, verbose):
+    def __init__(self, M, train_mask, test_mask, d, p, maxiter, lr, eta, scale,patience, decay, verbose):
         super(DLRL, self).__init__()
         self.M = M
-        self.I = I
-        self.I_test = I_test
+        self.train_mask = train_mask
+        self.test_mask = test_mask
         self.maxiter = maxiter
         self.lr = lr
         self.p = p
@@ -36,7 +36,7 @@ class DLRL(nn.Module):
             self.W.append(nn.Parameter(torch.eye(self.d, self.d), requires_grad=True))  
         self.W.append(nn.Parameter(torch.rand(self.d, self.n), requires_grad=True))
 
-        self.prox = SHRINK()  
+        self.prox = Prox()  
 
 
     def forward(self, u):
@@ -71,27 +71,21 @@ class DLRL(nn.Module):
                 lipz_tempr = max(Spectral_norm(x_right), torch.FloatTensor([1e-4]))
                 lipz = eta * (lipz_templ ** 2) * (lipz_tempr ** 2)
 
-            x_prob = x_left.matmul(x).matmul(x_right)
-            WXM = self.I.mul(self.M - x_prob)
+            x_mul = x_left.matmul(x).matmul(x_right)
+            WXM = self.train_mask.mul(self.M - x_mul)
             delta_f = x_left.t().matmul(WXM).matmul(x_right.t()) / lipz
-            temp_x_ = x - delta_f
-            temp_x = self.prox(temp_x_, self.W[ind], self.p[ind])  
-            return_x.append(temp_x)
+            Y = x - delta_f
+            X_hat = self.prox(Y, self.W[ind], self.p[ind])  
+            return_x.append(X_hat)
         return return_x
 
     def my_loss(self, M, X):
         x_prob = torch.eye(self.m, self.m)
         for i in range(self.p_len):
             x_prob = x_prob.matmul(X[i])
-        return 0.5 * (torch.norm((M - x_prob).mul(self.I))**2)
+        return 0.5 * (torch.norm((M - x_prob).mul(self.train_mask))**2)
     
 
-    def compute_sp_norm(self, x_list):
-        sp_sum = 0.0
-        for ind in range(len(x_list)):
-            sp = schatten_p_norm(x_list[ind], self.p[ind]) / self.p[ind]
-            sp_sum += sp
-        return sp_sum.cpu().detach().numpy()
 
     def train(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.lr,betas=(0.90, 0.92),weight_decay=0.15)
@@ -117,16 +111,17 @@ class DLRL(nn.Module):
                 print("--------------------------------------------------------")
 
     def predict(self):
-        X = self(self.X)
-        x_prob_all = torch.eye(self.m, self.m)
-        for i in range(self.p_len):
-            x_prob_all = x_prob_all.matmul(X[i])
-        x_prob = x_prob_all.mul(self.I_test)
-        x = self.M.mul(self.I_test)
+        with torch.no_grad():
+            X = self(self.X)
+            x_prob_all = torch.eye(self.m, self.m)
+            for i in range(self.p_len):
+                x_prob_all = x_prob_all.matmul(X[i])
+            x_prob = x_prob_all.mul(self.test_mask)
+            x = self.M.mul(self.test_mask)
 
-        rmse = torch.sum((x - x_prob) ** 2) / torch.sum(self.I_test)
+            rmse = torch.sum((x - x_prob) ** 2) / torch.sum(self.test_mask)
 
-        print("Test RMSE:",rmse.cpu().detach().numpy())
+            print("Test RMSE:",rmse.cpu().detach().numpy())
 
         return x_prob_all
 

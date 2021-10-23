@@ -1,7 +1,6 @@
-## Differentiable Low-Rank Learning (DLRL)
+## Deep Sparse Regularizer Learning (DSRL)
 
 This is an implement of methods in "Efficient Differentiable Low-Rank Learning Framework for Matrix Completion" that is still under review.
-We will keep sorting the codes of this method in the future.
 
 ### Environment
 
