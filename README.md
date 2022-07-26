@@ -1,4 +1,4 @@
-## Deep Sparse Regularizer Learning (DSRL)
+## Differentiable Low-Rank Learning (DLRL)
 
 This is an implement of methods in "Zhaoliang Chen, Jie Yao, Guobao Xiao and Shiping Wang, Efficient and Differentiable Low-rank Matrix Completion with Back Propagation, IEEE Transactions on Multimedia, 2021".
 
